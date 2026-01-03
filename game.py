@@ -1,9 +1,11 @@
 import pygame
 import random
 import sys
+import os
 
 # Inicializa o Pygame
 pygame.init()
+pygame.mixer.init()  # Inicializa o mixer de áudio
 
 # CONFIGURAÇÕES DA TELA
 LARGURA_TELA = 400
@@ -27,6 +29,66 @@ VELOCIDADE_CANOS = 3
 DISTANCIA_CANOS = 200
 ABERTURA_CANOS = 180
 
+# CARREGAMENTO DOS SONS
+def carregar_sons():
+    """Carrega todos os sons do jogo"""
+    sons = {
+        'jump': None,
+        'hit': None,
+        'point': None,
+        'background': None
+    }
+    
+    # Tenta carregar cada som
+    try:
+        # Som de pulo
+        if os.path.exists('assets/sounds/jump.wav'):
+            sons['jump'] = pygame.mixer.Sound('assets/sounds/jump.wav')
+            sons['jump'].set_volume(0.3)
+        elif os.path.exists('assets/sounds/jump.mp3'):
+            sons['jump'] = pygame.mixer.Sound('assets/sounds/jump.mp3')
+            sons['jump'].set_volume(0.3)
+    except:
+        print("⚠️ Som de pulo não encontrado")
+    
+    try:
+        # Som de colisão
+        if os.path.exists('assets/sounds/hit.wav'):
+            sons['hit'] = pygame.mixer.Sound('assets/sounds/hit.wav')
+            sons['hit'].set_volume(0.4)
+        elif os.path.exists('assets/sounds/hit.mp3'):
+            sons['hit'] = pygame.mixer.Sound('assets/sounds/hit.mp3')
+            sons['hit'].set_volume(0.4)
+    except:
+        print("⚠️ Som de colisão não encontrado")
+    
+    try:
+        # Som de ponto
+        if os.path.exists('assets/sounds/point.wav'):
+            sons['point'] = pygame.mixer.Sound('assets/sounds/point.wav')
+            sons['point'].set_volume(0.5)
+        elif os.path.exists('assets/sounds/point.mp3'):
+            sons['point'] = pygame.mixer.Sound('assets/sounds/point.mp3')
+            sons['point'].set_volume(0.5)
+    except:
+        print("⚠️ Som de ponto não encontrado")
+    
+    try:
+        # Música de fundo
+        if os.path.exists('assets/sounds/background.mp3'):
+            pygame.mixer.music.load('assets/sounds/background.mp3')
+            pygame.mixer.music.set_volume(0.2)
+        elif os.path.exists('assets/sounds/background.wav'):
+            pygame.mixer.music.load('assets/sounds/background.wav')
+            pygame.mixer.music.set_volume(0.2)
+    except:
+        print("⚠️ Música de fundo não encontrada")
+    
+    return sons
+
+# Carrega os sons
+SONS = carregar_sons()
+
 # CLASSE DO PÁSSARO
 class Passaro:
     def __init__(self):
@@ -38,8 +100,11 @@ class Passaro:
         self.angulo = 0
         
     def pular(self):
-        """Faz o pássaro pular"""
+        """Faz o pássaro pular e toca o som"""
         self.velocidade = FORCA_PULO
+        # Toca o som de pulo
+        if SONS['jump']:
+            SONS['jump'].play()
         
     def atualizar(self):
         """Atualiza a posição e velocidade do pássaro"""
@@ -166,13 +231,21 @@ def desenhar_texto(texto, tamanho, cor, x, y, centralizado=True):
 # TELA DE INÍCIO
 def tela_inicio():
     """Mostra a tela inicial do jogo"""
+    # Inicia a música de fundo
+    try:
+        pygame.mixer.music.play(-1)  # -1 = loop infinito
+    except:
+        pass
+    
     while True:
         tela.fill(AZUL_CEU)
         
         desenhar_texto("FLAPPY BIRD CLONE", 50, PRETO, LARGURA_TELA // 2, 150)
-        desenhar_texto("Pressione ESPAÇO para começar", 30, BRANCO, LARGURA_TELA // 2, 300)
+        desenhar_texto("🔊 COM SONS!", 35, AMARELO, LARGURA_TELA // 2, 220)
+        desenhar_texto("Pressione ESPAÇO para começar", 30, BRANCO, LARGURA_TELA // 2, 320)
         desenhar_texto("ESPAÇO = Pular", 25, PRETO, LARGURA_TELA // 2, 400)
-        desenhar_texto("ESC = Sair", 25, PRETO, LARGURA_TELA // 2, 440)
+        desenhar_texto("M = Ligar/Desligar Música", 20, PRETO, LARGURA_TELA // 2, 440)
+        desenhar_texto("ESC = Sair", 25, PRETO, LARGURA_TELA // 2, 480)
         
         pygame.display.flip()
         
@@ -186,10 +259,20 @@ def tela_inicio():
                 if evento.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
+                if evento.key == pygame.K_m:
+                    # Toggle música
+                    if pygame.mixer.music.get_busy():
+                        pygame.mixer.music.pause()
+                    else:
+                        pygame.mixer.music.unpause()
 
 # TELA DE GAME OVER
 def tela_game_over(pontos, recorde):
     """Mostra a tela de game over"""
+    # Toca som de colisão
+    if SONS['hit']:
+        SONS['hit'].play()
+    
     while True:
         tela.fill(AZUL_CEU)
         
@@ -243,6 +326,12 @@ def jogo():
                     if evento.key == pygame.K_ESCAPE:
                         pygame.quit()
                         sys.exit()
+                    if evento.key == pygame.K_m:
+                        # Toggle música
+                        if pygame.mixer.music.get_busy():
+                            pygame.mixer.music.pause()
+                        else:
+                            pygame.mixer.music.unpause()
             
             # Atualiza pássaro
             passaro.atualizar()
@@ -263,6 +352,10 @@ def jogo():
                 if not cano.passou and cano.x + cano.largura < passaro.x:
                     cano.passou = True
                     pontos += 1
+                    
+                    # Toca som de ponto
+                    if SONS['point']:
+                        SONS['point'].play()
                     
                     # Atualiza recorde
                     if pontos > recorde:
@@ -294,6 +387,12 @@ def jogo():
             # Desenha pontuação
             desenhar_texto(f"Pontos: {pontos}", 40, BRANCO, 70, 30, centralizado=False)
             desenhar_texto(f"Recorde: {recorde}", 30, BRANCO, 70, 70, centralizado=False)
+            
+            # Indicador de música
+            if pygame.mixer.music.get_busy():
+                desenhar_texto("🔊", 30, BRANCO, LARGURA_TELA - 30, 30, centralizado=False)
+            else:
+                desenhar_texto("🔇", 30, BRANCO, LARGURA_TELA - 30, 30, centralizado=False)
             
             pygame.display.flip()
         
