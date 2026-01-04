@@ -122,20 +122,6 @@ flappy-bird-clone/
 ├── README.md                 # Documentação
 └── .gitignore               # Arquivos ignorados pelo Git
 ```
-
----
-
-## 🎯 Roadmap de Melhorias Futuras
-
-- [ ] Adicionar sprites personalizados (imagens ao invés de formas geométricas)
-- [ ] Implementar sistema de dificuldade progressiva
-- [ ] Adicionar power-ups (escudo, slow motion, pontos extras)
-- [ ] Criar diferentes cenários/temas (dia, noite, espaço)
-- [ ] Salvar recorde permanente em arquivo
-- [ ] Implementar sistema de conquistas/badges
-- [ ] Adicionar menu de opções (volume, dificuldade)
-- [ ] Criar modo multiplayer local
-
 ---
 
 ## 🎓 Aprendizados
